@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\JWTAuth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\User;
 
 class UserController extends Controller
 {
+    // Iniciando el método de registro
     public function register(Request $request)
     {
         // Recojer los datos el usuario por post
@@ -34,7 +36,7 @@ class UserController extends Controller
                 // La validación de datos se paso correctamente
 
                 // Cifrar la contraseña
-                $pwd = password_hash($params->password, PASSWORD_BCRYPT, ['cost' => 4]);
+                $pwd = hash('sha256', $params->password);
                 // Crear el usuario
                 $user = new User();
                 $user->name = $params_array['name'];
@@ -61,9 +63,48 @@ class UserController extends Controller
         }
         return response()->json($data, $data['code']);
     }
+    // finalizando el método de registro
 
+
+    // iniciando el método de loguin 
     public function login(Request $request)
     {
-        return "Acción de registro en api";
+
+        $jwtAuth = new JWTAuth();
+        // Recibir datos por POST
+        $json = $request->input('json', true);
+        $params = json_decode($json);
+        $params_array = json_decode($json, true);
+
+        // Validar esos datos
+        $validate = Validator::make($params_array, [
+            'email'  => 'required|email',
+            'password' => 'required',
+        ]);
+
+        if ($validate->fails()) {
+            // La validación ha fallado
+
+            $signup = array(
+                'status' => 'error',
+                'code'  => 404,
+                'message' => 'El usuario no se ha podido identificar',
+                'error' => $validate->fails()
+            );
+        } else {
+            // Cifrar la password
+            $pwd = hash('sha256', $params->password);
+
+            // Devolver los datos o el token
+            $signup = $jwtAuth->signup($params->email, $pwd);
+
+            if (!empty($params->gettoken)) {
+                $signup = $jwtAuth->signup($params->email, $pwd, true);
+            }
+        }
+        return response()->json($signup, 200);
     }
+    // finalizando el método de loguin 
+
+    
 }
