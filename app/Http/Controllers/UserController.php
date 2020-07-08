@@ -106,5 +106,20 @@ class UserController extends Controller
     }
     // finalizando el método de loguin 
 
-    
+
+    // inciando el método de actulización de datos
+    public function update(Request $request)
+    {
+        $token = $request->header('Authorization');
+        $jwtAuth = new JWTAuth();
+        $checkToken = $jwtAuth->checkToken($token);
+
+        if ($checkToken) {
+            echo "<h1>Login Correcto</h1>";
+        } else {
+            echo "<h1>Login Incorrecto</h1>";
+        }
+        die();
+    }
+    // finalizando el método de actulización de datos
 }

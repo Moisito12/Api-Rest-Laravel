@@ -5,6 +5,7 @@ namespace App\Helpers;
 use Firebase\JWT\JWT;
 use Illuminate\Support\Facades\DB;
 use App\User;
+use DomainException;
 
 class JWTAuth
 {
@@ -14,6 +15,7 @@ class JWTAuth
     {
         $this->key = 'MASTER_KEY';
     }
+    // Iniciando método para autentificación y devolución de token
     public function signup($email, $password, $getToken = null)
     {
         // Buscar si existe el usuario en la bd
@@ -53,4 +55,33 @@ class JWTAuth
         }
         return $data;
     }
+    // finalizando método para autentificación y devolución de token
+
+
+    // Inciando el método de revisión de token
+    public function checkToken($jwt, $getIdentity = false)
+    {
+        $auth = false;
+
+        try {
+            $jwt = str_replace("'", '', $jwt);
+            $decoded = JWT::decode($jwt, $this->key, ['HS256']);
+        } catch (\UnexpectedValueException $e) {
+            $auth = false;
+        } catch (\DomainException $e) {
+            $auth = false;
+        }
+        if (!empty($decoded) && is_object($decoded) && isset($decoded->sub)) {
+            $auth = true;
+        } else {
+            $auth = false;
+        }
+
+        if ($getIdentity) {
+            return $decoded;
+        }
+
+        return $auth;
+    }
+    // finalizando el método de revisión de token
 }
