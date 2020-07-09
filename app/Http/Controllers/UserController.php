@@ -214,4 +214,26 @@ class UserController extends Controller
         }
     }
     // finalizando el método para sacar un avatar
+
+    // inciando el método para sacar los detalles de un usuario
+    public function detail($id)
+    {
+        $user = User::find($id);
+
+        if (is_object($user)) {
+            $data = [
+                'code' => 200,
+                'status' => 'success',
+                'user' => $user
+            ];
+        } else {
+            $data = [
+                'code' => 404,
+                'status' => 'error',
+                'message' => 'No se encontró el usuario personalizado'
+            ];
+        }
+        return response()->json($data, $data['code']);
+    }
+    // finalizando el método para sacar los detalles de un usuario
 }
