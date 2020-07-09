@@ -25,3 +25,6 @@ Route::put('/api/user/update', 'UserController@update');
 Route::post('/api/user/upload', 'UserController@upload')->middleware(ApiAuthMiddleware::class);
 Route::get('/api/user/avatar/{filename}', 'UserController@getImage')->middleware(ApiAuthMiddleware::class);
 Route::get('/api/user/detail/{id}', 'UserController@detail')->middleware(ApiAuthMiddleware::class);
+
+// RUTAS DEL CONTROLADOR DE CATEGORIAS
+Route::resource('api/category', 'CategoryController');

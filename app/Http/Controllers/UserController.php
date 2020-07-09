@@ -230,7 +230,7 @@ class UserController extends Controller
             $data = [
                 'code' => 404,
                 'status' => 'error',
-                'message' => 'No se encontró el usuario personalizado'
+                'message' => 'No se encontró a ese usuario'
             ];
         }
         return response()->json($data, $data['code']);
