@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Helpers\JWTAuth;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Validator;
 use App\User;
+use Illuminate\Http\File;
+use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
 {
@@ -162,13 +165,53 @@ class UserController extends Controller
     // Inciando el método para subir avatar
     public function upload(Request $request)
     {
-        $data = [
-            'code' => 200,
-            'status' => 'success',
-            'message' => 'Método de subir avatar'
-        ];
+        // Recoger datos de la petición
+        $image = $request->file('file0');
 
-        return response()->json($data, $data['code'])->header('Content-Type', 'text/plain');
+        // Validación de imagenes
+        $validate = Validator::make($request->all(), [
+            'file0' => 'required|image'
+        ]);
+        // Guardar la imagen
+        if (!$image || $validate->fails()) {
+            $data = [
+                'code' => 404,
+                'status' => 'error',
+                'message' => 'Error al subir la imagen'
+            ];
+        } else {
+            $image_name = time() . $image->getClientOriginalName();
+            Storage::disk('users')->put($image_name, file_get_contents($image));
+
+            // Devolver un resultado
+            $data = [
+                'code' => 200,
+                'status' => 'success',
+                'image' => $image_name
+            ];
+        }
+        return response()->json($data, $data['code']);
     }
     // finalizando el método para subir avatar
+
+
+    // iniciando el método para sacar un avatar
+    public function getImage($fileName)
+    {
+        $isset = Storage::disk('users')->exists($fileName);
+
+        if ($isset) {
+            $file = Storage::disk('users')->get($fileName);
+            return new Response($file, 200);
+        } else {
+            $data = [
+                'code' => 404,
+                'status' => 'error',
+                'message' => 'Error al obtener la imagen'
+            ];
+
+            return response()->json($data, $data['code']);
+        }
+    }
+    // finalizando el método para sacar un avatar
 }
