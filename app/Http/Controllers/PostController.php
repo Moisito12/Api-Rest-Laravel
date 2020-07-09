@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use App\Post;
 use App\Category;
 use App\Helpers\JWTAuth;
@@ -14,7 +15,7 @@ class PostController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('api.auth', ['except' => ['index', 'show']]);
+        $this->middleware('api.auth', ['except' => ['index', 'show', 'getImage', 'getPostsByCategory', 'getPostsByUsers']]);
     }
 
     # Get All posts
@@ -238,5 +239,49 @@ class PostController extends Controller
 
         // Devolver los datos
         return response()->json($data, $data['code']);
+    }
+
+    # Get post image
+    public function getImage($filename)
+    {
+        // Validar si existe el fichero
+        $isset = Storage::disk('images')->exists($filename);
+
+        if ($isset) {
+            // conseguir la imagen
+            $file = Storage::disk('images')->get($filename);
+
+            // Devolver una respuesta
+            return new Response($file, 200);
+        } else {
+            $data = [
+                'code' => 400,
+                'status' => 'error',
+                'message' => 'La imagen no existe'
+            ];
+        }
+        return response()->json($data, $data['code']);
+    }
+
+    # Get posts by category
+    public function getPostsByCategory($id)
+    {
+        $posts = Post::where('category_id', $id)->get();
+
+        return response()->json([
+            'status' => 'success',
+            'posts' => $posts
+        ], 200);
+    }
+
+    #Get posts by user
+    public function getPostsByUser($id)
+    {
+        $posts = Post::where('user_id', $id)->get();
+
+        return response()->json([
+            'status' => 'success',
+            'posts' => $posts
+        ], 200);
     }
 }
