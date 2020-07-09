@@ -28,3 +28,7 @@ Route::get('/api/user/detail/{id}', 'UserController@detail')->middleware(ApiAuth
 
 // RUTAS DEL CONTROLADOR DE CATEGORIAS
 Route::resource('api/category', 'CategoryController');
+
+// Rutas del controlador de Posts
+Route::resource('/api/post', 'PostController');
+
