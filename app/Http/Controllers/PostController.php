@@ -149,4 +149,31 @@ class PostController extends Controller
         }
         return response()->json($data, $data['code']);
     }
+
+    # Delete the post
+    public function destroy($id, Request $request)
+    {
+        // conseguir el registro
+        $post = Post::find($id);
+
+        if (!empty($post)) {
+            // Borrarlo
+            $post->delete();
+
+            // Devolver algo
+            $data = array(
+                'code' => 200,
+                'status' => 'success',
+                'message' => $post
+            );
+        } else {
+            $data = array(
+                'code' => 404,
+                'status' => 'error',
+                'message' => 'No se encontró el post solicitado'
+            );
+        }
+
+        return response()->json($data, $data['code']);
+    }
 }
