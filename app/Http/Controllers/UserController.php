@@ -110,16 +110,65 @@ class UserController extends Controller
     // inciando el método de actulización de datos
     public function update(Request $request)
     {
+        // Comprobar si el usuario esta identificado
         $token = $request->header('Authorization');
         $jwtAuth = new JWTAuth();
         $checkToken = $jwtAuth->checkToken($token);
 
         if ($checkToken) {
-            echo "<h1>Login Correcto</h1>";
+            // Recojer los datos por post
+            $json = $request->input('json', null);
+            $params_array = json_decode($json, true);
+
+            // Sacar el usuario identificado
+            $user = $jwtAuth->checkToken($token, true);
+
+            // Validar datos
+            $validate = Validator::make($params_array, [
+                'name' => 'required',
+                'surname' => 'required',
+                'email' => 'required|email|unique:users',
+                'password' => 'required'
+            ]);
+
+            // Quitar los campos que no quiero actualizar
+            unset($params_array['id']);
+            unset($params_array['role']);
+            unset($params_array['password']);
+            unset($params_array['created_at']);
+            unset($params_array['remember_token']);
+
+            // Actualizar usuarios en la bdd
+            $user_update = User::where('id', $user->sub)->update($params_array);
+
+
+            // Devolver array con resultado
+            $data = [
+                'code' => 200,
+                'status' => 'sucess',
+                'user' =>  $params_array
+            ];
         } else {
-            echo "<h1>Login Incorrecto</h1>";
+            $data = [
+                'status' => 'error',
+                'code' => 400,
+                'message' => 'El usuario no está identificado'
+            ];
         }
-        die();
+        return response()->json($data, $data['code']);
     }
     // finalizando el método de actulización de datos
+
+    // Inciando el método para subir avatar
+    public function upload(Request $request)
+    {
+        $data = [
+            'code' => 200,
+            'status' => 'success',
+            'message' => 'Método de subir avatar'
+        ];
+
+        return response()->json($data, $data['code'])->header('Content-Type', 'text/plain');
+    }
+    // finalizando el método para subir avatar
 }

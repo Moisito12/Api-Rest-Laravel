@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\ApiAuthMiddleware;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -21,3 +22,4 @@ Route::get('/', function () {
 Route::post('/api/register', 'UserController@register');
 Route::post('/api/login', 'UserController@login');
 Route::put('/api/user/update', 'UserController@update');
+Route::post('/api/user/upload', 'UserController@upload')->middleware(ApiAuthMiddleware::class);
