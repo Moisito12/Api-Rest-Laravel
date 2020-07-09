@@ -7,6 +7,7 @@ use App\Post;
 use App\Category;
 use App\Helpers\JWTAuth;
 use App\User;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class PostController extends Controller
@@ -131,14 +132,28 @@ class PostController extends Controller
                 unset($params_array['created_at']);
                 unset($params_array['user']);
 
-                // Actualizar el registro en concreto
-                $post = Post::where('id', $id)->update($params_array);
+                // Sacar el usuario identificado
+                $user = $this->getIdentityUser($request);
 
-                $data = array(
-                    'code' => 200,
-                    'status' => 'success',
-                    'chages' => $params_array
-                );
+                // Actualizar el registro en concreto
+                $post = Post::where('id', $id)
+                    ->where('user_id', $user->sub)
+                    ->first();
+
+                if (!empty($post) && is_object($post)) {
+                    $data = array(
+                        'code' => 200,
+                        'status' => 'success',
+                        'post' => $post,
+                        'chages' => $params_array
+                    );
+                } else {
+                    $data = array(
+                        'code' => 404,
+                        'status' => 'error',
+                        'message' => 'Error con la actualización'
+                    );
+                }
             }
         } else {
             $data = array(
@@ -153,8 +168,13 @@ class PostController extends Controller
     # Delete the post
     public function destroy($id, Request $request)
     {
+        // conseguir el usuario identificado
+        $user = $this->getIdentityUser($request);
+
         // conseguir el registro
-        $post = Post::find($id);
+        $post = Post::where('id', $id)
+            ->where('user_id', $user->sub)
+            ->first();
 
         if (!empty($post)) {
             // Borrarlo
@@ -174,6 +194,49 @@ class PostController extends Controller
             );
         }
 
+        return response()->json($data, $data['code']);
+    }
+
+    # Identify user
+    public function getIdentityUser(Request $request)
+    {
+        $jwtAuth = new JWTAuth();
+        $token = $request->header('Authorization', null);
+        $user = $jwtAuth->checkToken($token, true);
+
+        return $user;
+    }
+
+    # Upload image for posts
+    public function upload(Request $request)
+    {
+        // Recojer la imagen de la petición
+        $image = $request->file('file0');
+
+        // Validar la imagen
+        $validate = Validator::make($request->all(), [
+            'file0' => 'required'
+        ]);
+
+        // Guardar que sea imagen
+        if (!$image || $validate->fails()) {
+            $data = array(
+                'code' => 400,
+                'status' => 'error',
+                'message' => 'Error al cargar la imagen'
+            );
+        } else {
+            $image_name = time() . $image->getClientOriginalName();
+            Storage::disk('images')->put($image_name, file_get_contents($image));
+
+            $data = [
+                'code' => 200,
+                'status' => 'success',
+                'image' => $image_name
+            ];
+        }
+
+        // Devolver los datos
         return response()->json($data, $data['code']);
     }
 }
